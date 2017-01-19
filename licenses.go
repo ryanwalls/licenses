@@ -379,6 +379,7 @@ type License struct {
 	Score        float64
 	Template     *Template
 	Path         string
+	Text         string
 	Err          string
 	ExtraWords   []string
 	MissingWords []string
@@ -442,6 +443,7 @@ func listLicenses(gopath string, pkgs []string) ([]License, error) {
 				if err != nil {
 					return nil, err
 				}
+				license.Text = string(data)
 				m = matchTemplates(data, templates)
 				matched[fpath] = m
 			}
@@ -533,6 +535,20 @@ func groupLicenses(licenses []License) ([]License, error) {
 	return kept, nil
 }
 
+func printLicensesText(licenses []License) {
+	for _, l := range licenses {
+		title := fmt.Sprintf("License for %v:", l.Package)
+		fmt.Println(strings.Repeat("-", len(title)))
+		fmt.Println(title)
+		fmt.Println(strings.Repeat("-", len(title)))
+		if l.Text != "" {
+			fmt.Println(l.Text)
+		} else {
+			fmt.Println("No license found.")
+		}
+	}
+}
+
 func printLicenses() error {
 	flag.Usage = func() {
 		fmt.Println(`Usage: licenses IMPORTPATH...
@@ -548,11 +564,13 @@ With -a, all individual packages are displayed instead of grouping them by
 license files.
 With -w, words in package license file not found in the template license are
 displayed. It helps assessing the changes importance.
+With -c, print the contents of each package's license file for attribution.
 `)
 		os.Exit(1)
 	}
 	all := flag.Bool("a", false, "display all individual packages")
 	words := flag.Bool("w", false, "display words not matching license template")
+	collect := flag.Bool("c", false, "print the contents of each package's license file")
 	flag.Parse()
 	if flag.NArg() < 1 {
 		return fmt.Errorf("expect at least one package argument")
@@ -570,6 +588,11 @@ displayed. It helps assessing the changes importance.
 			return err
 		}
 	}
+	if *collect {
+		printLicensesText(licenses)
+		return nil
+	}
+
 	w := tabwriter.NewWriter(os.Stdout, 1, 4, 2, ' ', 0)
 	for _, l := range licenses {
 		license := "?"
