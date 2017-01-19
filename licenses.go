@@ -15,7 +15,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/pmezard/licenses/assets"
+	"github.com/conkiztador/licenses/assets"
 )
 
 type Template struct {
