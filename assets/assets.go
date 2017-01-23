@@ -2,6 +2,7 @@
 //go:generate asset afl_3.0.txt
 //go:generate asset agpl_3.0.txt
 //go:generate asset apache_2.0.txt
+//go:generate asset notice_apache_2.0.txt
 //go:generate asset artistic_2.0.txt
 //go:generate asset bsd_2_clause.txt
 //go:generate asset bsd_3_clause_clear.txt
