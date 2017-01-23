@@ -94,6 +94,16 @@ func makeWordSet(data []byte) map[string]int {
 	return words
 }
 
+// importPathStripVendor takes an ImportPath from `go list` or similar and,
+// if it's actually a vendor path, re-canonicalizes it.
+func importPathStripVendor(path string) string {
+	sp := strings.Split(path, "/vendor/")
+	if len(sp) == 1 {
+		return path
+	}
+	return sp[len(sp)-1]
+}
+
 type Word struct {
 	Text string
 	Pos  int
@@ -277,11 +287,12 @@ type PkgError struct {
 }
 
 type PkgInfo struct {
-	Name       string
-	Dir        string
-	Root       string
-	ImportPath string
-	Error      *PkgError
+	Name                string
+	Dir                 string
+	Root                string
+	ImportPath          string
+	CanonicalImportPath string
+	Error               *PkgError
 }
 
 func getPackagesInfo(gopath string, pkgs []string) ([]*PkgInfo, error) {
@@ -311,6 +322,7 @@ func getPackagesInfo(gopath string, pkgs []string) ([]*PkgInfo, error) {
 		if info.Error != nil && info.Name == "" {
 			info.Name = info.ImportPath
 		}
+		info.CanonicalImportPath = importPathStripVendor(info.ImportPath)
 		infos = append(infos, info)
 	}
 	return infos, err
@@ -432,7 +444,7 @@ func listLicenses(gopath string, pkgs []string) ([]License, error) {
 			return nil, err
 		}
 		license := License{
-			Package: info.ImportPath,
+			Package: info.CanonicalImportPath,
 			Path:    path,
 		}
 		if path != "" {
