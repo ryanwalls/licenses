@@ -332,7 +332,11 @@ var (
 	reLicense = regexp.MustCompile(`(?i)^(?:` +
 		`((?:un)?licen[sc]e)|` +
 		`((?:un)?licen[sc]e\.(?:md|markdown|txt))|` +
-		`(copy(?:ing|right)(?:\.[^.]+)?)|` +
+		`((?:un)?licen[sc]e-[^\-]+-?[0-9\.]*)|` +
+		`((?:un)?licen[sc]e-[^\-]+-?[0-9\.]*\.(?:md|markdown|txt))|` +
+		`(copy(?:ing|right))|` +
+		`(copy(?:ing|right)\.(?:md|markdown|txt))|` +
+		`(copy(?:ing|right)-[^\-]+-?[0-9\.]*)|` +
 		`(licen[sc]e\.[^.]+)` +
 		`)$`)
 )
@@ -347,10 +351,16 @@ func scoreLicenseName(name string) float64 {
 	case m[1] != "":
 		return 1.0
 	case m[2] != "":
-		return 0.9
+		return 0.95
 	case m[3] != "":
-		return 0.8
+		return 0.9
 	case m[4] != "":
+		return 0.85
+	case m[5] != "":
+		return 0.8
+	case m[6] != "":
+		return 0.75
+	case m[7] != "":
 		return 0.7
 	}
 	return 0.

@@ -212,3 +212,34 @@ func TestStandardPackages(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+type fileNameTest struct {
+	Name  string
+	Score float64
+}
+
+func TestLicenseFileNames(t *testing.T) {
+	filenames := []fileNameTest{
+		fileNameTest{"NOT-LICENSE", 0},
+		fileNameTest{"LICENSE", 1},
+		fileNameTest{"LICENSE.txt", 0.95},
+		fileNameTest{"LICENSE.md", 0.95},
+		fileNameTest{"LICENSE.markdown", 0.95},
+		fileNameTest{"LICENSE-APACHE", 0.9},
+		fileNameTest{"LICENSE-APACHE-2.0", 0.9},
+		fileNameTest{"LICENSE-APACHE-2.0.txt", 0.85},
+		fileNameTest{"COPYING", 0.8},
+		fileNameTest{"COPYRIGHT", 0.8},
+		fileNameTest{"COPYRIGHT.txt", 0.75},
+		fileNameTest{"COPYRIGHT.md", 0.75},
+		fileNameTest{"COPYRIGHT.markdown", 0.75},
+		fileNameTest{"COPYING-APACHE", 0.7},
+		fileNameTest{"COPYING-APACHE-2.0", 0.7},
+	}
+	for _, f := range filenames {
+		score := scoreLicenseName(f.Name)
+		if score != f.Score {
+			t.Errorf("Name \"%v\" scored %v, expected %v.", f.Name, score, f.Score)
+		}
+	}
+}
