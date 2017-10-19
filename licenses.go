@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -571,6 +572,39 @@ func printLicensesText(licenses []License) {
 	}
 }
 
+func printLinks(licenses []License) {
+	for _, l := range licenses {
+		if l.Path == "" {
+			fmt.Printf("%v,%v\n", l.Package, "No license found.")
+			continue
+		}
+		licenseDirectory, licenseFileName := path.Split(l.Path)
+		licenseDirectory = importPathStripVendor(licenseDirectory)
+
+		// If license directory is a subpackage, prepend subpackage to license file name for github link
+		splitDirectory := strings.Split(licenseDirectory, string(os.PathSeparator))
+		rootPackage := splitDirectory[0] + "/" + splitDirectory[1] + "/" + splitDirectory[2]
+		subpackage := strings.TrimPrefix(licenseDirectory, rootPackage)
+		urlSuffix := licenseFileName
+		if subpackage != "" {
+			urlSuffix = subpackage + licenseFileName
+		}
+		// Handle golang.org libraries
+		var licenseLink string
+		if splitDirectory[0] == "golang.org" {
+			licenseLink = "https://github.com/golang/go/blob/master/LICENSE"
+		} else if splitDirectory[0]+"/"+splitDirectory[1] == "gopkg.in/yaml.v2" {
+			licenseLink = "https://github.com/go-yaml/yaml/blob/v2/LICENSE"
+		} else {
+			licenseLink = fmt.Sprintf("https://%v/blob/master%v", rootPackage, urlSuffix)
+		}
+		// TODO handle repos other than github
+		// TODO handle gopkg.in and other custom repos, see https://github.com/golang/gddo/wiki/Source-Code-Links
+
+		fmt.Printf("%v,%v\n", l.Package, licenseLink)
+	}
+}
+
 func printLicenses() error {
 	flag.Usage = func() {
 		fmt.Println(`Usage: licenses IMPORTPATH...
@@ -587,12 +621,16 @@ license files.
 With -w, words in package license file not found in the template license are
 displayed. It helps assessing the changes importance.
 With -c, print the contents of each package's license file for attribution.
+With -l, print the package and link to the license file in csv format.
+Link will be incorrect for gopkg.in packages, but could be fixed in the future by reading headers. See https://github.com/golang/gddo/wiki/Source-Code-Links
 `)
 		os.Exit(1)
 	}
 	all := flag.Bool("a", false, "display all individual packages")
 	words := flag.Bool("w", false, "display words not matching license template")
 	collect := flag.Bool("c", false, "print the contents of each package's license file")
+	links := flag.Bool("l", false, "print the link to license file for each package")
+
 	flag.Parse()
 	if flag.NArg() < 1 {
 		return fmt.Errorf("expect at least one package argument")
@@ -612,6 +650,10 @@ With -c, print the contents of each package's license file for attribution.
 	}
 	if *collect {
 		printLicensesText(licenses)
+		return nil
+	}
+	if *links {
+		printLinks(licenses)
 		return nil
 	}
 
