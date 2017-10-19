@@ -591,8 +591,10 @@ func printLinks(licenses []License) {
 		}
 		// Handle golang.org libraries
 		var licenseLink string
-		if strings.Split(licenseDirectory, string(os.PathSeparator))[0] == "golang.org" {
+		if splitDirectory[0] == "golang.org" {
 			licenseLink = "https://github.com/golang/go/blob/master/LICENSE"
+		} else if splitDirectory[0]+"/"+splitDirectory[1] == "gopkg.in/yaml.v2" {
+			licenseLink = "https://github.com/go-yaml/yaml/blob/v2/LICENSE"
 		} else {
 			licenseLink = fmt.Sprintf("https://%v/blob/master%v", rootPackage, urlSuffix)
 		}
